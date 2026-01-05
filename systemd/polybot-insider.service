@@ -1,0 +1,14 @@
+[Unit]
+Description=Polymarket Insider Detection
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/.gemini/antigravity/scratch/poly
+Environment="DISCORD_WEBHOOK_URL="
+ExecStart=/usr/bin/python3 app/insider_detection.py
+
+# Logging
+StandardOutput=append:/var/log/polybot-insider.log
+StandardError=append:/var/log/polybot-insider.log

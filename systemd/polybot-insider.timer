@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Polymarket Insider Detection every 5 minutes
+Requires=polybot-insider.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,23 @@
+[Unit]
+Description=Polymarket Prediction API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/.gemini/antigravity/scratch/poly
+Environment="DISCORD_WEBHOOK_URL="
+ExecStart=/usr/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=append:/var/log/polybot-api.log
+StandardError=append:/var/log/polybot-api.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
