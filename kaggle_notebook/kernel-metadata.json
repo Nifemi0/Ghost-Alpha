@@ -1,0 +1,14 @@
+{
+  "id": "skyyyyy111/poly-finetune-notebook-automated",
+  "title": "Poly Finetune Notebook (Automated)",
+  "code_file": "poly_finetune_notebook.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_data_sources": [
+    "skyyyyy111/poly-finetune-assets-automated"
+  ],
+  "competition_data_sources": []
+}
