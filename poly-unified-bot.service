@@ -1,0 +1,16 @@
+[Unit]
+Description=Latency Ghost - Unified Dual Engine
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/.gemini/antigravity/scratch/poly
+ExecStart=/root/.gemini/antigravity/scratch/poly/poly_venv/bin/python /root/.gemini/antigravity/scratch/poly/telegram_ghost_unified.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

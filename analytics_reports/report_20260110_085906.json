@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-01-10T08:59:06.492562",
+  "period": "1h",
+  "total_trades": 73,
+  "unique_users": 1,
+  "wins": 0,
+  "losses": 0,
+  "breakevens": 73,
+  "total_profit": 0.0,
+  "avg_profit_per_trade": 0.0,
+  "win_rate": 0.0,
+  "avg_binance_gap": 0.0001558122631867886,
+  "avg_entry_price": 0.24,
+  "avg_exit_price": 0.24,
+  "price_movement_correlation": 0.0,
+  "hourly_distribution": {
+    "8": 73
+  },
+  "user_performance": {
+    "5652968204": {
+      "trades": 73,
+      "profit": 0.0,
+      "wins": 0
+    }
+  }
+}

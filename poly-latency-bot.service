@@ -1,0 +1,14 @@
+[Unit]
+Description=Polymarket Latency Ghost Bot
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/.gemini/antigravity/scratch/poly
+ExecStart=/root/.gemini/antigravity/scratch/poly/poly_venv/bin/python telegram_ghost.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Ghost Analytics Hourly Timer
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Unit=ghost-analytics.service
+
+[Install]
+WantedBy=timers.target

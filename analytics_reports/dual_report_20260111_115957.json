@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-11T11:59:57.604028",
+  "executor": {
+    "total_trades": 1,
+    "wins": 1,
+    "losses": 0,
+    "total_profit": 4.71698113207546,
+    "avg_gap": 0.00036862067962015237,
+    "trades": [
+      {
+        "time": "2026-01-11 11:31:53",
+        "gap": 0.00036862067962015237,
+        "profit": 4.71698113207546
+      }
+    ],
+    "win_rate": 100.0
+  },
+  "observer": null,
+  "alpha_efficiency": 0.0
+}

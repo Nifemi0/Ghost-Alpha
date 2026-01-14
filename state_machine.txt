@@ -1,0 +1,36 @@
+[SystemState]
+  |
+  +-- [Initializing]
+  |     |-- load_env() -> success/fail
+  |     |-- UnifiedDB.init_db()
+  |     |-- DualEngine.init_session()
+  |     +-- [Startup] -> "DUAL ENGINE V2 ACTIVE"
+  |
+  +-- [Running] <----> [Paused] (Admin Toggle)
+        |
+        +-- [MasterLoop] (Infinite)
+        |     |-- check_volatility(binance_history)
+        |     |     |-- Gap > 0.00018? -> TRIGGER
+        |     |     +-- Gap < 0.00018? -> sleep(0.1s)
+        |
+        +-- [Monitors] (Async Tasks)
+        |     |-- BinanceMonitor (WebSocket) -> self.prices["binance"]
+        |     |-- PolymarketMonitor (HTTP Loop) -> self.poly_price
+        |
+        +-- [Triggered Event]
+              |
+              +-- [Executor] (Real Money)
+              |     |-- check_balance() > 0?
+              |     |-- execute_instant_trade()
+              |     |     |-- Buy Entry
+              |     |     |-- Watch Loop (Max 5s)
+              |     |     |     |-- Target Profit? -> SELL (Profit)
+              |     |     |     |-- Stop Loss? -> SELL (Loss)
+              |     |     |     +-- Timeout? -> SELL (Timeout)
+              |     |     +-- Log & Broadcast
+              |
+              +-- [Multiverse Observer] (Simulation)
+                    |-- create_simulation_id()
+                    |-- [Timeline A] (3s) -> Log OBSERVER_3S
+                    |-- [Timeline B] (7s) -> Log OBSERVER_7S -> Update DB Balance
+                    |-- [Timeline C] (15s) -> Log OBSERVER_15S
