@@ -298,3 +298,36 @@
 {"timestamp": 1768489718.1798587, "move": 9.157090353806008e-05, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
 {"timestamp": 1768489720.1926577, "move": 9.61458533638286e-05, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
 {"timestamp": 1768489721.198798, "move": 9.60416766710201e-05, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489735.2324345, "move": 0.0001307163809706833, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489736.2425218, "move": 0.0001307163809706833, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489739.2277682, "move": 0.00010216415123457901, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489740.236831, "move": 0.00010226829410020703, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489745.2295055, "move": -0.00011402457495123852, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489746.2511637, "move": -0.00014932533377176225, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489750.2349224, "move": -9.050424088919456e-05, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"ts": 1768489760.1278384, "user": 5652968204, "move": 0.00027967270065283286, "entry": 0.5, "exit": 0.5, "hold": 3.0, "profit": -0.6310473628269965, "timeline": "A", "confidence": 0.99, "velocity": 0.0}
+{"ts": 1768489761.150928, "user": 5652968204, "move": 0.00036935631721658795, "entry": 0.5, "exit": 0.5, "hold": 3.0, "profit": -0.6310473628269965, "timeline": "A", "confidence": 0.99, "velocity": 0.0}
+{"ts": 1768489762.3059452, "user": 5652968204, "move": 0.0002889637900058637, "entry": 0.5, "exit": 0.5, "hold": 3.0, "profit": -0.6310473628269965, "timeline": "A", "confidence": 0.99, "velocity": 0.0}
+{"ts": 1768489764.1343646, "user": 5652968204, "move": 0.00027967270065283286, "entry": 0.5, "exit": 0.5, "hold": 7.0, "profit": -0.6310473628269965, "timeline": "B_CANONICAL", "confidence": 0.99, "velocity": 0.0}
+{"ts": 1768489765.1537113, "user": 5652968204, "move": 0.00036935631721658795, "entry": 0.5, "exit": 0.5, "hold": 7.0, "profit": -0.6310473628269965, "timeline": "B_CANONICAL", "confidence": 0.99, "velocity": 0.0}
+{"timestamp": 1768489764.2086983, "move": 0.00017821964405201663, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"ts": 1768489766.3083148, "user": 5652968204, "move": 0.0002889637900058637, "entry": 0.5, "exit": 0.5, "hold": 7.0, "profit": -0.6310473628269965, "timeline": "B_CANONICAL", "confidence": 0.99, "velocity": 0.0}
+{"ts": 1768489767.1442368, "user": 5652968204, "move": -0.0003529834384999021, "entry": 0.5, "exit": 0.5, "hold": 3.0, "profit": -0.6310473628269965, "timeline": "A", "confidence": 0.99, "velocity": 0.0}
+{"timestamp": 1768489767.2351825, "move": 0.00010394255462295945, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489768.2421863, "move": 0.00010394255462295945, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"ts": 1768489770.647114, "user": 5652968204, "move": 0.0005157126849496592, "entry": 0.5, "exit": 0.5, "hold": 3.0, "profit": -0.6306056296730176, "timeline": "A", "confidence": 0.99, "velocity": 0.0}
+{"ts": 1768489771.1665964, "user": 5652968204, "move": -0.0003529834384999021, "entry": 0.5, "exit": 0.5, "hold": 7.0, "profit": -0.6310473628269965, "timeline": "B_CANONICAL", "confidence": 0.99, "velocity": 0.0}
+{"timestamp": 1768489770.1539264, "move": 0.00010403578747860633, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"ts": 1768489772.1367743, "user": 5652968204, "move": 0.00027967270065283286, "entry": 0.5, "exit": 0.5, "hold": 15.0, "profit": -0.6310473628269965, "timeline": "C", "confidence": 0.99, "velocity": 0.0}
+{"timestamp": 1768489771.172508, "move": 0.00010403578747860633, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"ts": 1768489773.1547203, "user": 5652968204, "move": 0.00036935631721658795, "entry": 0.5, "exit": 0.5, "hold": 15.0, "profit": -0.6310473628269965, "timeline": "C", "confidence": 0.99, "velocity": 0.0}
+{"timestamp": 1768489773.2303534, "move": -9.64311427028419e-05, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"ts": 1768489774.3116992, "user": 5652968204, "move": 0.0002889637900058637, "entry": 0.5, "exit": 0.5, "hold": 15.0, "profit": -0.6310473628269965, "timeline": "C", "confidence": 0.99, "velocity": 0.0}
+{"ts": 1768489774.6712809, "user": 5652968204, "move": 0.0005157126849496592, "entry": 0.5, "exit": 0.5, "hold": 7.0, "profit": -0.6306056296730176, "timeline": "B_CANONICAL", "confidence": 0.99, "velocity": 0.0}
+{"timestamp": 1768489774.44233, "move": 9.238307766737573e-05, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489776.227221, "move": 0.00014563554206276932, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"ts": 1768489779.1678097, "user": 5652968204, "move": -0.0003529834384999021, "entry": 0.5, "exit": 0.5, "hold": 15.0, "profit": -0.6310473628269965, "timeline": "C", "confidence": 0.99, "velocity": 0.0}
+{"timestamp": 1768489778.4955106, "move": 0.00015868790269909572, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"timestamp": 1768489780.2067013, "move": 0.00019723669005851352, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}
+{"ts": 1768489782.1409912, "user": 5652968204, "move": 0.0003415139606184549, "entry": 0.5, "exit": 0.5, "hold": 3.0, "profit": -0.6301642057322465, "timeline": "A", "confidence": 0.99, "velocity": 0.0}
+{"timestamp": 1768489781.2117832, "move": 0.00019723669005851352, "velocity": 0.0, "poly_price": 0.5, "action": "SKIP", "confidence": 0.0, "outcome": 0}

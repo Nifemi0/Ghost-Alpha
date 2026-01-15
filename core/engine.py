@@ -266,9 +266,9 @@ class DualEngine:
                     # We pass raw values; Brain handles DataFrame construction
                     brain_confidence = self.brain.predict_confidence(b_move, self.poly_price, velocity)
                     
-                    # 🧠 BRAIN OVERRIDE: If the move is HUGE (> 3x Threshold), ignore the Brain's skepticism.
+                    # 🧠 BRAIN OVERRIDE: If the move is HUGE (> 1.5x Threshold), ignore the Brain's skepticism.
                     # This fixes the issue where "Velocity=0" (stale/flat tail) causes the Brain to reject valid big moves.
-                    if abs(b_move) > (C.VOLATILITY_THRESHOLD * 3.0):
+                    if abs(b_move) > (C.VOLATILITY_THRESHOLD * 1.5):
                         print(f"🚀 [CORE] Brain Override! Signal Strength {abs(b_move)*100:.3f}% >> Threshold.", flush=True)
                         brain_confidence = 0.99
                     
