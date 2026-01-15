@@ -1,13 +1,12 @@
-from config.constants import MAX_CONCURRENT_TRADES
-from config.constants import MAX_CONCURRENT_TRADES
-
 import asyncio
 import time
 import uuid
+import numpy as np
+import config.constants as C
 from config.constants import (
     MAX_DRAWDOWN_PCT, BUY_PERCENT, TARGET_PROFIT_PCT,
     VOLATILITY_THRESHOLD, EXIT_TIMEOUT, REAL_WORLD_SLIPPAGE,
-    REAL_WORLD_TAKER_FEE
+    REAL_WORLD_TAKER_FEE, MAX_CONCURRENT_TRADES
 )
 
 class TradeExecutor:
@@ -42,6 +41,18 @@ class TradeExecutor:
         # ALPHA OPTIMIZATION: Scale target with signal strength
         move_multiplier = abs(move) / VOLATILITY_THRESHOLD
         user_target = user_target * max(1.0, (move_multiplier * 0.75))
+
+        # 🛡️ GHOST SHIELD: Stagnant Market Check
+        # If the Polymarket price hasn't moved in > 10 mins, skip.
+        # This prevents trading on stale data or dead markets.
+        if time.time() - self.engine.poly_last_move_time > 600:
+            print(f"🛡️ [SHIELD] Stagnant Market skipped for user {user_id}. No Poly move in 10m.", flush=True)
+            return
+
+        # Explicitly skip if price is stuck at the 0.5 default mid with no activity
+        if self.engine.poly_price == 0.5 and (time.time() - self.engine.poly_last_move_time > 300):
+            print(f"🛡️ [SHIELD] Flat Midpoint (0.5) skipped for user {user_id}.", flush=True)
+            return
 
         # Market-open check before trade
         url = f"https://clob.polymarket.com/markets/{self.engine.token_id}"
@@ -88,10 +99,6 @@ class TradeExecutor:
         # FIX: The "invest" variable is per-trade.
         # If Global Buy% is 50%, and we have 5 slots, we want TOTAL exposure to be 50%.
         # So each trade should be (Balance * 0.50) / 5 = 10% of balance.
-        
-        # We hard-code the divisor based on the MAX_CONCURRENT_TRADES constant 
-        # because the engine typically fills all available slots during a signal.
-        from config.constants import MAX_CONCURRENT_TRADES
         
         # Dynamic Risk Sizing
         invest = (balance * user_buy_pct) / MAX_CONCURRENT_TRADES

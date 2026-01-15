@@ -31,6 +31,7 @@ class DualEngine:
         self.observer_db = UnifiedDB(C.OBSERVER_DB)
         self.prices = {"binance": 0.0}
         self.poly_price = 0.0
+        self.poly_last_move_time = 0
         self.poly_question = "Loading market details..."
         self.token_id = C.DEFAULT_TOKEN_ID
         self.binance_history = deque(maxlen=50)
@@ -120,13 +121,29 @@ class DualEngine:
                                 new_id = slug
                                 new_question = event.get("title", slug)
                                 
-                                # Only switch if different (Check ID and Question equality to prevent Slug vs Numeric loops)
+                                # DATE-STICKY LOGIC: Don't flip-flop between markets of the same date
+                                import re
+                                date_pattern = r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+"
+                                current_date_match = re.search(date_pattern, self.poly_question)
+                                new_date_match = re.search(date_pattern, new_question)
+                                
+                                # Only switch if the DATE is actually different (tomorrow vs today)
+                                # This prevents jitter between "Daily" and "3AM ET" markets of the same day.
+                                if current_date_match and new_date_match and current_date_match.group(0) == new_date_match.group(0):
+                                    continue
+
+                                # LIQUIDITY FLOOR: Predictive markets must also have volume
+                                m = markets[0]
+                                liquidity = float(m.get("liquidity", 0))
+                                if liquidity < 10000:
+                                    continue
+
                                 if new_id != self.token_id and new_question != self.poly_question:
-                                    print(f"✅ [CORE] Predictive Successor: {new_question}", flush=True)
+                                    print(f"✅ [CORE] Predictive Successor: {new_question} | Liq: ${liquidity:,.0f}", flush=True)
                                     self.token_id = new_id
                                     self.poly_question = new_question
                                     self.save_config()
-                                    await self.broadcast_alert(C.ADMIN_ID, f"🔄 *MARKET ROLLOVER (PREDICTIVE)*\n\nTargeting: `{new_question}`")
+                                    await self.broadcast_alert(C.ADMIN_ID, f"🔄 *MARKET ROLLOVER (PREDICTIVE)*\n\nTargeting: `{new_question}`\nLiquidity: `${liquidity:,.0f}`")
                                     return True
 
             # STRATEGY 2: Fallback to Broad Search
@@ -140,7 +157,8 @@ class DualEngine:
                     candidates = []
                     for m in markets:
                         title = m.get("question", "")
-                        if ("Bitcoin" in title or "BTC" in title) and ("Up or Down" in title):
+                        # Filter out time-specific markets (3AM, 12PM) to prefer THE daily one
+                        if ("Bitcoin" in title or "BTC" in title) and ("Up or Down" in title) and not any(x in title for x in ["3AM", "12PM", "9AM", "6PM"]):
                             candidates.append(m)
                     
                     # Sort by liquidity descending
@@ -148,21 +166,28 @@ class DualEngine:
                     
                     for m in candidates:
                         # Use Market ID if available, else Token ID
-                        new_id = m.get("id") # Prefer Market ID integers now as they are cleaner
+                        new_id = str(m.get("id")) 
                         if not new_id: new_id = m.get("clobTokenIds", [""])[0]
-                        
                         new_question = m.get("question", "Unknown Market")
                         
+                        # Apply Date-Sticky logic
+                        new_date_match = re.search(date_pattern, new_question)
+                        current_date_match = re.search(date_pattern, self.poly_question)
+                        if current_date_match and new_date_match and current_date_match.group(0) == new_date_match.group(0):
+                            continue
+
+                        # Ensure the market has actual liquidity before switching
+                        liquidity = float(m.get("liquidity", 0))
+                        if liquidity < 10000:
+                            continue
+
                         if new_id and str(new_id) != str(self.token_id) and new_id != self.token_id and new_question != self.poly_question:
-                            # PROACTIVE CHECK: Only rollover if the new market has significant liquidity 
-                            # or if we are in reactive mode.
-                            if not proactive or float(m.get("liquidity", 0)) > 500:
-                                print(f"✅ [CORE] Search Successor: {new_question} ({new_id})", flush=True)
-                                self.token_id = str(new_id)
-                                self.poly_question = new_question
-                                self.save_config()
-                                await self.broadcast_alert(C.ADMIN_ID, f"🔄 *MARKET ROLLOVER (SEARCH)*\n\nTargeting: `{new_question}`")
-                                return True
+                            print(f"✅ [CORE] Search Successor: {new_question} ({new_id}) | Liq: ${liquidity:,.0f}", flush=True)
+                            self.token_id = str(new_id)
+                            self.poly_question = new_question
+                            self.save_config()
+                            await self.broadcast_alert(C.ADMIN_ID, f"🔄 *MARKET ROLLOVER (SEARCH)*\n\nTargeting: `{new_question}`\nLiquidity: `${liquidity:,.0f}`")
+                            return True
             
             if not proactive:
                 print("⚠️ [CORE] No active successor market found.", flush=True)
@@ -229,6 +254,10 @@ class DualEngine:
                 if not b_past: b_past = [history[0][1]]
                 
                 b_price = self.prices["binance"]
+                if b_price < 10000: # Safety: Bitcoin is never < $10k in this timeline
+                    await asyncio.sleep(0.1)
+                    continue
+                
                 b_move = (b_price - b_past[-1]) / b_past[-1]
                 
                 # Velocity / Momentum

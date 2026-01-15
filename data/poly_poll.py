@@ -30,22 +30,34 @@ class PolyMonitor:
                             if data and len(data) > 0:
                                 # First event, first market
                                 m = data[0].get("markets", [{}])[0]
-                                if "lastTradePrice" in m:
-                                    self.engine.poly_price = float(m["lastTradePrice"])
+                                # Robust Price Resolution: prefer REAL trade data
+                                price_val = m.get("lastTradePrice") or m.get("bestBid") 
+                                if price_val is not None:
+                                    new_price = float(price_val)
+                                    # Only count as a "move" if we already had a baseline price
+                                    if self.engine.poly_price > 0 and abs(new_price - self.engine.poly_price) > (self.engine.poly_price * 0.00001):
+                                        import time
+                                        self.engine.poly_last_move_time = time.time()
+                                    
+                                    # Update Price
+                                    self.engine.poly_price = new_price
                                     self.engine.poly_question = m.get("question", m.get("groupItemTitle", "Unknown"))
-                                    # Update real token ID for execution if possible? 
-                                    # Actually, execution needs a numeric ID. 
-                                    # We should extract the valid CLOB ID here and update self.engine.token_id in memory (but careful about race conditions).
-                                    # For now, just getting price is enough to stop the crash.
-                                    # Execution will fail if token_id is a slug.
-                                    # CRITICAL: We must update token_id to the numeric one found in the slug.
-                                    real_tokens = m.get("clobTokenIds", [])
-                                    if real_tokens:
-                                        # Update engine token_id to the numeric one so execution works!
-                                        # But we need the YES token usually (index 0 or 1?)
-                                        # Usually 0 is the first outcome.
-                                        self.engine.token_id = real_tokens[0]
-                                        print(f"✅ [DATA] Resolved Slug to Token: {self.engine.token_id[:10]}...", flush=True)
+                                else:
+                                    # If no real trade/bid data, skip this update
+                                    continue
+                                # Update real token ID for execution if possible? 
+                                # Actually, execution needs a numeric ID. 
+                                # We should extract the valid CLOB ID here and update self.engine.token_id in memory (but careful about race conditions).
+                                # For now, just getting price is enough to stop the crash.
+                                # Execution will fail if token_id is a slug.
+                                # CRITICAL: We must update token_id to the numeric one found in the slug.
+                                real_tokens = m.get("clobTokenIds", [])
+                                if real_tokens:
+                                    # Update engine token_id to the numeric one so execution works!
+                                    # But we need the YES token usually (index 0 or 1?)
+                                    # Usually 0 is the first outcome.
+                                    self.engine.token_id = real_tokens[0]
+                                    print(f"✅ [DATA] Resolved Slug to Token: {self.engine.token_id[:10]}...", flush=True)
                         else:
                             await self.engine.check_market_health()
                     
