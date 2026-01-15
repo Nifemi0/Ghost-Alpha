@@ -5,7 +5,7 @@ __pycache__/
 *.so
 .env
 .venv
-env/
+poly_venv/
 venv/
 ENV/
 env.bak/
@@ -14,16 +14,26 @@ venv.bak/
 # Project Database
 *.db
 *.sqlite3
+*.db.gz
 
-# Large Model Files
+# Large Data & Model Files
 models/*.pt
 models/*.pkl
-poly_brain_v3_export_*.zip
-
-# Logs
+*.zip
+*.tar.gz
+*.jsonl
+*.csv
+nohup.out
 *.log
-systemd/*.log
+
+# Project Specific
+trade_log.txt
+api_log.txt
+uvicorn.log
+server.log
+server_output*.log
 
 # IDE
 .idea/
 .vscode/
+.DS_Store

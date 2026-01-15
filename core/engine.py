@@ -6,6 +6,7 @@ import os
 import socket
 import aiohttp
 import pandas as pd
+import numpy as np
 from collections import deque
 from persist.database import UnifiedDB
 from intelligence.brain import GhostBrain
@@ -255,7 +256,6 @@ class DualEngine:
                             system_status = "FROZEN"
                             last_freeze_time = now
                         await asyncio.sleep(1)
-                        continue
                     else:
                         if system_status == "FROZEN" and now - last_freeze_time > 30:
                             print(f"🟢 [SHIELD] Stability Restored.", flush=True)
@@ -263,12 +263,26 @@ class DualEngine:
                         last_signal_time = now
 
                     # INTELLIGENCE: Confidence Gating - More aggressive barrier
+                    # We pass raw values; Brain handles DataFrame construction
                     brain_confidence = self.brain.predict_confidence(b_move, self.poly_price, velocity)
+                    
+                    # 🧠 BRAIN OVERRIDE: If the move is HUGE (> 3x Threshold), ignore the Brain's skepticism.
+                    # This fixes the issue where "Velocity=0" (stale/flat tail) causes the Brain to reject valid big moves.
+                    if abs(b_move) > (C.VOLATILITY_THRESHOLD * 3.0):
+                        print(f"🚀 [CORE] Brain Override! Signal Strength {abs(b_move)*100:.3f}% >> Threshold.", flush=True)
+                        brain_confidence = 0.99
+                    
                     if brain_confidence < 0.35:
+                        # Log the rejection to stdout so we can see it
+                        print(f"🧠 [BRAIN] Rejected Signal (Conf: {brain_confidence:.2f}) | Move: {b_move:.5f} | Vel: {velocity:.5f}", flush=True)
                         await self.sim_logger.log({
-                            "ts": time.time(), "user": C.ADMIN_ID, "move": b_move, 
-                            "status": "DISCARDED_BY_BRAIN", "confidence": brain_confidence,
-                            "velocity": velocity
+                            "timestamp": now,
+                            "move": b_move,
+                            "velocity": velocity,
+                            "poly_price": self.poly_price, # Corrected from self.poly_monitor.engine.poly_price
+                            "action": "SKIP",
+                            "confidence": brain_confidence,
+                            "outcome": 0
                         })
                         continue
 
