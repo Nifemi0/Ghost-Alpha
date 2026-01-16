@@ -1,4 +1,3 @@
-
 import asyncio
 import time
 import json
@@ -18,6 +17,7 @@ from simulations.observer import PolyObserver
 from simulations.logger import MultiverseLogger
 import config.constants as C
 from ui.views import signal_alert
+from persist.incidents import logger as incident_logger
 
 # Global state for Alpha Shield (Shared across threads/tasks if needed)
 system_status = "STABLE"
@@ -82,147 +82,7 @@ class DualEngine:
         except Exception as e:
             print(f"❌ [CORE] Config Save Error: {e}", flush=True)
 
-    async def find_next_market(self, proactive=False):
-        """Auto-Rollover: Finds the 'Bitcoin' daily market."""
-        if not proactive:
-            print("🕵️ [CORE] Reactive Rollover: Current market stalled. Searching...", flush=True)
-        
-        try:
-            await self.poly_monitor.init_session()
 
-            # STRATEGY 1: Deterministic Prediction (The "Back to the Future" Fix)
-            # Predict "Tomorrow's" slug based on current date
-            from datetime import datetime, timedelta
-            now = datetime.utcnow()
-            
-            # If proactive, we likely want "Tomorrow" relative to now.
-            # If reactive (market dead), we might want "Today" (if it's not closed yet) or "Tomorrow".
-            # Let's try "Tomorrow" first as that's the usual rollover target.
-            targets = [now + timedelta(days=1), now]
-            
-            for target_date in targets:
-                # Format: "January 15" -> "january-15"
-                # Polymarket format: "bitcoin-up-or-down-on-january-15"
-                month = target_date.strftime("%B").lower()
-                day = target_date.day
-                slug = f"bitcoin-up-or-down-on-{month}-{day}"
-                
-                check_url = f"https://gamma-api.polymarket.com/events?slug={slug}"
-                async with self.poly_monitor.session.get(check_url, ssl=True) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        if data and len(data) > 0:
-                            # Valid Event Found!
-                            event = data[0]
-                            markets = event.get("markets", [])
-                            if markets:
-                                # We found a valid market for this date.
-                                # Use the SLUG as the ID to leverage our new Slug Resolution in PolyMonitor
-                                new_id = slug
-                                new_question = event.get("title", slug)
-                                
-                                # DATE-STICKY LOGIC: Don't flip-flop between markets of the same date
-                                import re
-                                date_pattern = r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+"
-                                current_date_match = re.search(date_pattern, self.poly_question)
-                                new_date_match = re.search(date_pattern, new_question)
-                                
-                                # Only switch if the DATE is actually different (tomorrow vs today)
-                                # This prevents jitter between "Daily" and "3AM ET" markets of the same day.
-                                if current_date_match and new_date_match and current_date_match.group(0) == new_date_match.group(0):
-                                    continue
-
-                                # LIQUIDITY FLOOR: Predictive markets must also have volume
-                                m = markets[0]
-                                liquidity = float(m.get("liquidity", 0))
-                                if liquidity < 10000:
-                                    continue
-
-                                if new_id != self.token_id and new_question != self.poly_question:
-                                    print(f"✅ [CORE] Predictive Successor: {new_question} | Liq: ${liquidity:,.0f}", flush=True)
-                                    self.token_id = new_id
-                                    self.poly_question = new_question
-                                    self.save_config()
-                                    await self.broadcast_alert(C.ADMIN_ID, f"🔄 *MARKET ROLLOVER (PREDICTIVE)*\n\nTargeting: `{new_question}`\nLiquidity: `${liquidity:,.0f}`")
-                                    return True
-
-            # STRATEGY 2: Fallback to Broad Search
-            # Fetch active Bitcoin markets - Broad Search (Flux Capacitor Fix)
-            search_url = "https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=500&order=liquidity&ascending=false"
-            async with self.poly_monitor.session.get(search_url, ssl=True) as resp:
-                if resp.status == 200:
-                    markets = await resp.json()
-                    
-                    # Filter for 'Up or Down' daily style markets
-                    candidates = []
-                    for m in markets:
-                        title = m.get("question", "")
-                        # Filter out time-specific markets (3AM, 12PM) to prefer THE daily one
-                        if ("Bitcoin" in title or "BTC" in title) and ("Up or Down" in title) and not any(x in title for x in ["3AM", "12PM", "9AM", "6PM"]):
-                            candidates.append(m)
-                    
-                    # Sort by liquidity descending
-                    candidates.sort(key=lambda x: float(x.get("liquidity", 0)), reverse=True)
-                    
-                    for m in candidates:
-                        # Use Market ID if available, else Token ID
-                        new_id = str(m.get("id")) 
-                        if not new_id: new_id = m.get("clobTokenIds", [""])[0]
-                        new_question = m.get("question", "Unknown Market")
-                        
-                        # Apply Date-Sticky logic
-                        new_date_match = re.search(date_pattern, new_question)
-                        current_date_match = re.search(date_pattern, self.poly_question)
-                        if current_date_match and new_date_match and current_date_match.group(0) == new_date_match.group(0):
-                            continue
-
-                        # Ensure the market has actual liquidity before switching
-                        liquidity = float(m.get("liquidity", 0))
-                        if liquidity < 10000:
-                            continue
-
-                        if new_id and str(new_id) != str(self.token_id) and new_id != self.token_id and new_question != self.poly_question:
-                            print(f"✅ [CORE] Search Successor: {new_question} ({new_id}) | Liq: ${liquidity:,.0f}", flush=True)
-                            self.token_id = str(new_id)
-                            self.poly_question = new_question
-                            self.save_config()
-                            await self.broadcast_alert(C.ADMIN_ID, f"🔄 *MARKET ROLLOVER (SEARCH)*\n\nTargeting: `{new_question}`\nLiquidity: `${liquidity:,.0f}`")
-                            return True
-            
-            if not proactive:
-                print("⚠️ [CORE] No active successor market found.", flush=True)
-            return False
-        except Exception as e:
-            print(f"❌ [CORE] Market Scout Error: {e}", flush=True)
-            return False
-
-    async def run_market_scout(self):
-        """Proactive background task to find tomorrow's market before today's ends."""
-        print("🕵️ [CORE] Proactive Market Scout Active.", flush=True)
-        while True:
-            # Check every 15 minutes
-            await asyncio.sleep(900)
-            try:
-                await self.find_next_market(proactive=True)
-            except Exception as e:
-                print(f"⚠️ [CORE] Market Scout Loop Error: {e}")
-
-    async def check_market_health(self):
-        """Checks if current market is alive by fetching price."""
-        price_url = f"https://clob.polymarket.com/price?token_id={self.token_id}&side=buy"
-        try:
-             await self.poly_monitor.init_session()
-             async with self.poly_monitor.session.get(price_url, ssl=True, timeout=5) as resp:
-                if resp.status != 200:
-                    print(f"⚠️ [CORE] Unhealthy Market ({resp.status}). Triggering rollover...", flush=True)
-                    await self.find_next_market()
-                    return
-                data = await resp.json()
-                if "price" not in data or float(data.get("price", 0)) <= 0:
-                    print(f"⚠️ [CORE] Stagnant Market. Triggering rollover...", flush=True)
-                    await self.find_next_market()
-        except Exception as e:
-            print(f"⚠️ [CORE] Health Check Error: {e}", flush=True)
 
     async def broadcast_alert(self, user_id, text):
         try: await self.app.bot.send_message(chat_id=user_id, text=text, parse_mode='Markdown')
@@ -239,6 +99,7 @@ class DualEngine:
             # Diagnostic Heartbeat: verify loop is alive
             if now - last_heartbeat > 60:
                 print(f"💓 [CORE] Heartbeat: Binance ${self.prices['binance']:.2f} | Poly ${self.poly_price:.4f} | Status: {system_status}", flush=True)
+                incident_logger.log("CORE", f"Heartbeat: Bin ${self.prices['binance']:.2f} Poly ${self.poly_price:.4f}", level="DEBUG")
                 last_heartbeat = now
 
             if self.paused:
@@ -288,31 +149,27 @@ class DualEngine:
                     else:
                         if system_status == "FROZEN" and now - last_freeze_time > 30:
                             print(f"🟢 [SHIELD] Stability Restored.", flush=True)
+                            incident_logger.log("CORE", "Stability Restored. Unfreezing Engine.", level="INFO")
                             system_status = "STABLE"
                         last_signal_time = now
 
-                    # INTELLIGENCE: Confidence Gating - More aggressive barrier
-                    # We pass raw values; Brain handles DataFrame construction
-                    brain_confidence = self.brain.predict_confidence(b_move, self.poly_price, velocity)
-                    
-                    # 🧠 BRAIN OVERRIDE: If the move is HUGE (> 1.5x Threshold), ignore the Brain's skepticism.
-                    # This fixes the issue where "Velocity=0" (stale/flat tail) causes the Brain to reject valid big moves.
-                    if abs(b_move) > (C.VOLATILITY_THRESHOLD * 1.5):
-                        print(f"🚀 [CORE] Brain Override! Signal Strength {abs(b_move)*100:.3f}% >> Threshold.", flush=True)
-                        brain_confidence = 0.99
-                    
-                    if brain_confidence < 0.35:
-                        # Log the rejection to stdout so we can see it
-                        print(f"🧠 [BRAIN] Rejected Signal (Conf: {brain_confidence:.2f}) | Move: {b_move:.5f} | Vel: {velocity:.5f}", flush=True)
-                        await self.sim_logger.log({
-                            "timestamp": now,
-                            "move": b_move,
-                            "velocity": velocity,
-                            "poly_price": self.poly_price, # Corrected from self.poly_monitor.engine.poly_price
-                            "action": "SKIP",
-                            "confidence": brain_confidence,
-                            "outcome": 0
-                        })
+                    # GHOST V2.5 PERSISTENCE: Pure Signal Execution (Brain moved to Observer)
+                    brain_confidence = 0.99 # Bypass gating
+
+                    # 🛡️ GHOST SHIELD: Stagnant Market Check
+                    # If the Polymarket price hasn't moved in > 10 mins, skip broadcasting and execution.
+                    if now - self.poly_last_move_time > 600:
+                        # Optionally print to log
+                        if abs(b_move) > effective_threshold:
+                             print(f"🛡️ [SHIELD] Stagnant Market skipped. No Poly move in 10m.", flush=True)
+                             incident_logger.log("CORE", "Signal skipped: Stagnant market (10m+ delay)", level="INFO")
+                        continue
+
+                    # Explicitly skip if price is stuck at the 0.5 default mid with no activity
+                    if self.poly_price == 0.5 and (now - self.poly_last_move_time > 300):
+                        if abs(b_move) > effective_threshold:
+                            print(f"🛡️ [SHIELD] Flat Midpoint (0.5) skipped. Stale baseline.", flush=True)
+                            incident_logger.log("CORE", "Signal skipped: Flat 0.5 baseline stagnant", level="INFO")
                         continue
 
                     # PERSISTENCE: Get Active Hunters
@@ -334,9 +191,10 @@ class DualEngine:
                                 self.tasks.add(task)
                                 task.add_done_callback(lambda t: (self.tasks.discard(t), self.user_trade_counts.update({uid: self.user_trade_counts[uid]-1})))
                     
-                    # SIMULATION: Parallel Observation
+                    # SIMULATION: Parallel Observation (Brain evaluates HERE)
                     if any(u[0] == C.ADMIN_ID for u in active_users):
-                        obs_task = asyncio.create_task(self.observer.observe(C.ADMIN_ID, b_move, brain_confidence, velocity))
+                        real_brain_conf = self.brain.predict_confidence(b_move, self.poly_price, velocity)
+                        obs_task = asyncio.create_task(self.observer.observe(C.ADMIN_ID, b_move, real_brain_conf, velocity))
                         self.tasks.add(obs_task)
                         obs_task.add_done_callback(self.tasks.discard)
             else:

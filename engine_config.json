@@ -1,6 +1,6 @@
 {
-  "token_id": "bitcoin-up-or-down-on-january-16",
-  "question": "Bitcoin Up or Down on January 16?",
+  "token_id": "bitcoin-up-or-down-on-january-17",
+  "question": "Bitcoin Up or Down on January 17?",
   "volatility_threshold": 8e-05,
   "target_profit_pct": 0.005,
   "buy_percent": 0.35

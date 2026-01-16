@@ -9,6 +9,8 @@ from config.constants import (
     REAL_WORLD_TAKER_FEE, MAX_CONCURRENT_TRADES
 )
 
+from persist.incidents import logger as incident_logger
+
 class TradeExecutor:
     def __init__(self, engine):
         self.engine = engine
@@ -46,12 +48,10 @@ class TradeExecutor:
         # If the Polymarket price hasn't moved in > 10 mins, skip.
         # This prevents trading on stale data or dead markets.
         if time.time() - self.engine.poly_last_move_time > 600:
-            print(f"🛡️ [SHIELD] Stagnant Market skipped for user {user_id}. No Poly move in 10m.", flush=True)
             return
 
         # Explicitly skip if price is stuck at the 0.5 default mid with no activity
         if self.engine.poly_price == 0.5 and (time.time() - self.engine.poly_last_move_time > 300):
-            print(f"🛡️ [SHIELD] Flat Midpoint (0.5) skipped for user {user_id}.", flush=True)
             return
 
         # Market-open check before trade
@@ -74,7 +74,7 @@ class TradeExecutor:
         # We compare effective_price vs engine.poly_price (mid)
         # If effective_price > self.engine.poly_price * 1.005, it means we are eating > 0.5% slippage
         if effective_price > self.engine.poly_price * 1.005:
-            # Optionally log this as "SKIPPED_LIQUIDITY"
+            incident_logger.log("EXECUTOR", f"Trade skipped for {user_id}: Slippage too high ({effective_price:.4f} vs {self.engine.poly_price:.4f})", level="WARNING")
             return
 
         # Define entry price EARLY using the EFFECTIVE price (Reality)
@@ -130,6 +130,7 @@ class TradeExecutor:
             if hold_time >= EXIT_TIMEOUT:
                 exit_price = current_price
                 exit_reason = "TIMEOUT"
+                incident_logger.log("EXECUTOR", f"Trade TIMEOUT for {user_id}. Market stagnant at {exit_price:.4f}", level="WARNING")
                 break
             if profit_pct < scaled_sl:
                 exit_price = current_price

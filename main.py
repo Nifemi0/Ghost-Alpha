@@ -31,7 +31,7 @@ async def main():
     asyncio.create_task(engine.binance_monitor.run())
     asyncio.create_task(engine.poly_monitor.run())
     asyncio.create_task(engine.batcher.run_flusher())
-    asyncio.create_task(engine.run_market_scout())
+    # Market scouting disabled as per user instruction
     asyncio.create_task(engine.run_master_loop())
     
     # 5. Run Polling

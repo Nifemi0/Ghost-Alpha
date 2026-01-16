@@ -58,8 +58,7 @@ class PolyMonitor:
                                     # Usually 0 is the first outcome.
                                     self.engine.token_id = real_tokens[0]
                                     print(f"✅ [DATA] Resolved Slug to Token: {self.engine.token_id[:10]}...", flush=True)
-                        else:
-                            await self.engine.check_market_health()
+                        pass
                     
                     await asyncio.sleep(1)
                     continue
@@ -100,10 +99,9 @@ class PolyMonitor:
                                                 # Also grab the REAL CLOB ID if possible for the future
                                                 # But for now just get the price.
                                                 pass
-                                        else:
-                                            await self.engine.check_market_health()
+                                            pass
                         except:
-                            await self.engine.check_market_health()
+                            pass
                 
                 # Periodically sync market question
                 info_url = f"https://clob.polymarket.com/markets/{self.engine.token_id}"
